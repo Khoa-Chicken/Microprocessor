@@ -1,0 +1,36 @@
+BT1: Viết chương trình hiển thị giá trị từ 0 đến 9 và lặp lại lên LED 7 đoạn, giữa mỗi lần hiển thị với khoảng thời gian là 1 giây.
+CODE:
+.EQU LED_DDR = DDRB
+.EQU LED_PORT = PORTB
+.ORG 0
+LDI R16, 0XFF
+OUT LED_DDR, R16
+LDI R18, 0
+LOOP:
+	LDI ZH, HIGH (LED<<1)
+	LDI ZL, LOW (LED<<1)
+	LDI R17, 0
+	ADD ZL, R18 
+	ADC ZH, R17
+	LPM R19, Z
+	OUT LED_PORT, R19
+	RCALL DELAY_1S
+	INC R18
+	CPI R18, 10
+	BRNE LOOP
+	LDI R18, 0
+	RJMP LOOP
+DELAY_1S:
+	LDI R20, 100
+L1:	LDI R21, 100
+L2:	LDI R22, 200
+L3: DEC R22
+	NOP 
+	BRNE L3
+	DEC R21
+	BRNE L2
+	DEC R20
+	BRNE L1
+	RET
+LED:
+.DB 0XC0, 0XF9, 0XA4, 0XB0, 0X99, 0X92, 0X82, 0XF8, 0X80, 0X90
