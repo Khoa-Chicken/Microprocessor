@@ -1,4 +1,4 @@
-BT1: Tạo delay 2s, hiển thị ra led giá trị từ 0 đến 9, khoảng thời gian giữa mỗi lần hiển thị bằng thời gian delay (Tạo delay bằng timer1)
+BT1: Tạo delay 4s, hiển thị ra led giá trị từ 0 đến 9, khoảng thời gian giữa mỗi lần hiển thị bằng thời gian delay (Tạo delay bằng timer1)
 .EQU LED_DDR = DDRB
 .EQU LED_PORT = PORTB
 .ORG 0
@@ -13,19 +13,29 @@ LOOP:
 	ADC ZH, R17
 	LPM R19, Z
 	OUT LED_PORT, R19
-	RCALL DELAY_2S
+	RCALL DELAY_4S
 	INC R18
 	CPI R18, 10
 	BRNE LOOP
 	LDI R18, 0
 	RJMP LOOP
-DELAY_2S:
-          LDS TCNT1H, HIGH (-15625)
-          LDS TCNT1L, LOW (-15625)
-          LDI R16, 0B00000000
-          STS TCCR1A, R16
-          LDI R17, 0B00000101
-          STS TCCR1B, R17
-
+DELAY_4S:
+          LDI R24, HIGH (-31250)
+		  STS TCNT1H, R24
+          LDI R25, LOW (-31250)
+		  STS TCNT1L, R25
+          LDI R20, 0B00000000
+          STS TCCR1A, R20
+          LDI R21, 0B00000101
+          STS TCCR1B, R21
+WAIT:
+	IN R22, TIFR1
+	SBRS R22, TOV1
+	RJMP WAIT
+	OUT TIFR1, R22
+	LDI R23, 0
+	STS TCCR1B, R23
+	RET
 LED:
 .DB 0XC0, 0XF9, 0XA4, 0XB0, 0X99, 0X92, 0X82, 0XF8, 0X80, 0X90
+
