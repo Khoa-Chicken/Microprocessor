@@ -140,7 +140,109 @@ L3:	DEC R19 <BR>
 &emsp;	RET <BR> 
 ![SANGDANLED](https://github.com/user-attachments/assets/787f75be-de24-4007-b11e-1b75974e9786)  
 
-**PROGRAM FOR TRANSLATION, BIT BY BIT, FROM lEFT TO RIGHT**  
+**PROGRAM FOR TRANSLATION, BIT BY BIT, FROM lEFT TO RIGHT** <br>
+.ORG 0 <br>
+SET_UP:
+	LDI R16, 0B00001111 <br>
+	OUT DDRA, R16 <br>
+	SBI PORTA, 3          ; Kéo MR lên 1 liên tục (Không cần dùng MR để reset nữa) <br>
+
+MAIN: 
+	; ========================================== <br>
+	; HIỆU ỨNG 1: SÁNG DẦN (Từ Q7 về Q0) <br>
+	; ========================================== <br>
+SANG_DAN_START: <br>
+	LDI R23, 1            ; R23: Số lượng bit 1 sẽ tăng dần từ 1 đến 8 <br>
+
+SANG_DAN_LOOP: 
+	MOV R24, R23          ; R24: Số bit 1 cần nạp <br>
+	LDI R25, 8 <br>
+	SUB R25, R23          ; R25: Số bit 0 cần nạp <br>
+
+	; --- Nạp các bit 1 ---
+	SBI PORTA, 1          ; Kéo DS = 1 <br>
+SD_SHIFT_1: <br>
+	CBI PORTA, 0 <br>
+	SBI PORTA, 0 <br>
+	DEC R24 <br>
+	BRNE SD_SHIFT_1 <br>
+
+	; --- Nạp các bit 0 (nếu có) ---
+	TST R25               ; Nếu R25 = 0 thì bỏ qua <br>
+	BREQ SD_LATCH <br>
+	CBI PORTA, 1          ; Kéo DS = 0 <br>
+SD_SHIFT_0: <br>
+	CBI PORTA, 0 <br>
+	SBI PORTA, 0 <br>
+	DEC R25 <br>
+	BRNE SD_SHIFT_0 <br>
+
+SD_LATCH:
+	CBI PORTA, 2          ; Chốt STCP xuất ra LED <br>
+	SBI PORTA, 2 <br>
+	RCALL Delay_500ms <br>
+
+	INC R23               ; Tăng số lượng LED sáng
+	CPI R23, 9            ; Sáng đủ 8 LED chưa? <br>
+	BRNE SANG_DAN_LOOP    ; Chưa thì lặp lại <br>
+
+	; ==========================================
+	; HIỆU ỨNG 2: TẮT DẦN (Từ Q7 về Q0) <br>
+	; ========================================== <br>
+TAT_DAN_START: <br>
+	LDI R23, 1            ; R23: Số lượng bit 0 sẽ tăng dần từ 1 đến 8 <br>
+
+TAT_DAN_LOOP:
+	MOV R24, R23          ; R24: Số bit 0 cần nạp <br>
+	LDI R25, 8 <br>
+	SUB R25, R23          ; R25: Số bit 1 cần nạp <br>
+
+	; --- Nạp các bit 0 (Để tắt LED) ---
+	CBI PORTA, 1          ; Kéo DS = 0 <br>
+TD_SHIFT_0: <br>
+	CBI PORTA, 0 <br>
+	SBI PORTA, 0 <br>
+	DEC R24 <br>
+	BRNE TD_SHIFT_0 <br>
+
+	; --- Nạp các bit 1 (Giữ lại các LED chưa tắt) --- 
+	TST R25 <br>
+	BREQ TD_LATCH <br>
+	SBI PORTA, 1          ; Kéo DS = 1 <br>
+TD_SHIFT_1: <br>
+	CBI PORTA, 0 <br>
+	SBI PORTA, 0 <br>
+	DEC R25 <br>
+	BRNE TD_SHIFT_1 <br>
+
+TD_LATCH:
+	CBI PORTA, 2          ; Chốt STCP xuất ra LED <br>
+	SBI PORTA, 2 <br>
+	RCALL Delay_500ms <br> 
+
+	INC R23               ; Tăng số lượng LED tắt
+	CPI R23, 9            ; Tắt đủ 8 LED chưa? <br>
+	BRNE TAT_DAN_LOOP <br>
+
+	; --- LẶP LẠI TỪ ĐẦU ---
+	RJMP SANG_DAN_START   ; Xong hiệu ứng tắt dần thì quay lại sáng dần <br>
+
+; ==========================================
+; CHƯƠNG TRÌNH CON DELAY <br>
+; ========================================== <br>
+Delay_500ms: <br>
+	LDI R17, 40 <br>
+L1:	LDI R18, 100 <br>
+L2:	LDI R19, 250 <br>
+L3:	DEC R19 <br>
+	NOP <br>
+	BRNE L3 <br>
+	DEC R18 <br>
+	BRNE L2 <br>
+	DEC R17 <br>
+	BRNE L1 <br>
+	RET <br>
+![TATDANLED](https://github.com/user-attachments/assets/78983c01-d34b-476e-961d-0aac902e697f)
 
 	
 
